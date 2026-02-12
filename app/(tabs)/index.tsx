@@ -10,24 +10,25 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.ascii}>
-{`    .  * .          .      *
- * .         * .
-   .   ✨  WanderWise  ✨   .
-       .          .       .
- _    .  .       * .       .
-/ \\ /  \\    .      * .
-   V    \\       .   .    .
-\\_______/   * .      .
- | _ |  _______________ 🪁  
- | _ | /               \\  *
- | _ |/. .-. .-. --- .-.\\  . 
-==========================
- ~~~~ ~~~~ ~~~~ ~~~~ ~~~~
-     WanderWise Hills `}
+{`  .        _
+   ***       ***      .
+ ** . **   ** . **
+**  .  ** **  .  **    _
+ ** . **   ** . **
+   ***   *   ***   .
+      **✨**
+   ***   *   ***
+ ** . **   ** . **  _
+**  .  **.**  .  **
+ ** . ** . ** . **    .
+   ***   .   ***
+  _       .        .
+            . .   *
+    WanderWise    _`}
       </Text>
       <Text style={styles.subtitle}>Wrong Turn In youR maP</Text>
       <Text style={styles.description}>
-        길을 잃은 순간에서야{'\n'}완벽한 오류를 만나는 건{'\n'}{'\n'}과연 우연일까?  
+        길을 잃은 순간,{'\n'}완벽한 오류를 만나는 건{'\n'}{'\n'}과연 우연일까?  
       </Text>
       <TouchableOpacity style={styles.button} onPress={handleStart}>
         <Text style={styles.buttonText}>탐험 시작하기</Text>
@@ -47,13 +48,13 @@ const styles = StyleSheet.create({
   ascii: {
     fontFamily: Platform.OS === 'web' ? 'monospace' : 'Courier',
     fontSize: 11,
-    color: '#f4a261',
+    color: '#c792ea',
     marginBottom: 20,
     lineHeight: 14,
   },
   subtitle: {
     fontSize: 18,
-    color: '#f4a261',
+    color: '#67e8f9',
     marginBottom: 30,
   },
   description: {
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   button: {
-    backgroundColor: '#f4a261',
+    backgroundColor: '#e9d5ff',
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 30,

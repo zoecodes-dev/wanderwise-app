@@ -43,7 +43,7 @@ export default function HintScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#f4a261" />
+        <ActivityIndicator size="large" color="#a78bfa" />
         <Text style={styles.loadingText}>우연을 찾는 중...</Text>
       </View>
     );
@@ -91,22 +91,17 @@ export default function HintScreen() {
       <TouchableOpacity 
         style={styles.navigateButton} 
         onPress={() => {
-          const lat = userLocation.lat;
-          const lng = userLocation.lng;
           const url = Platform.select({
-            ios: `maps://app?daddr=${lat},${lng}`,
-            android: `google.navigation:q=${lat},${lng}`,
-            default: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+            ios: `maps://`,
+            android: `geo:0,0`,
+            default: `https://www.google.com/maps`,
           });
           if (url) {
-            Linking.openURL(url).catch(() => {
-              // 실패하면 웹 버전으로
-              Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`);
-            });
+            Linking.openURL(url);
           }
         }}
       >
-        <Text style={styles.navigateButtonText}>🗺️ 길 안내 시작</Text>
+        <Text style={styles.navigateButtonText}>🗺️ 지도 열기</Text>
       </TouchableOpacity>      
 
       <TouchableOpacity style={styles.button} onPress={fetchHint}>
@@ -129,7 +124,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   loadingText: {
-    color: '#f4a261',
+    color: '#a78bfa',
     fontSize: 18,
     marginTop: 20,
   },
@@ -139,7 +134,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   moodLabel: {
-    color: '#f4a261',
+    color: '#e9d5ff',
     fontSize: 16,
     marginBottom: 15,
   },
@@ -165,7 +160,7 @@ const styles = StyleSheet.create({
   },
   distance: {
     fontSize: 20,
-    color: '#4ade80',
+    color: '#67e8f9',
     marginBottom: 15,
   },
   hintText: {
@@ -178,10 +173,10 @@ const styles = StyleSheet.create({
   },
   category: {
     fontSize: 14,
-    color: '#f4a261',
+    color: '#e9d5ff',
   },
   button: {
-    backgroundColor: '#f4a261',
+    backgroundColor: '#a78bfa',
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 30,
@@ -200,7 +195,7 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   navigateButton: {
-    backgroundColor: '#4ade80',
+    backgroundColor: '#67e8f9',
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 30,

@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#f4a261',
+    color: '#e9d5ff',
     textAlign: 'center',
     marginBottom: 10,
   },
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   moodCardSelected: {
-    borderColor: '#f4a261',
+    borderColor: '#e9d5ff',
     backgroundColor: '#3a3a5e',
   },
   moodEmoji: {
@@ -113,11 +113,11 @@ const styles = StyleSheet.create({
     color: '#ccc',
   },
   moodLabelSelected: {
-    color: '#f4a261',
+    color: '#e9d5ff',
     fontWeight: 'bold',
   },
   nextButton: {
-    backgroundColor: '#f4a261',
+    backgroundColor: '#67e8f9',
     paddingVertical: 15,
     borderRadius: 30,
     marginTop: 20,
