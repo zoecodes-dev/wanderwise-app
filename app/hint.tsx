@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Linking, Platform} from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Linking, Platform } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState, useEffect } from 'react';
+import * as Location from 'expo-location';
 
 // 웹이 아닐 때만 MapView import
 let MapView: any = null;
@@ -15,32 +16,46 @@ export default function HintScreen() {
   const { mood } = useLocalSearchParams();
   const [hint, setHint] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  // 임시 좌표 (리스본 중심)
-  const userLocation = {
-    lat: 38.7169,
-    lng: -9.1399,
-  };
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchHint();
+    getLocationAndFetchHint();
   }, []);
 
-  const fetchHint = async () => {
+  const getLocationAndFetchHint = async () => {
     try {
+      // 1. 위치 권한 요청
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setLocationError('위치 권한이 필요해요');
+        setLoading(false);
+        return;
+      }
+
+      // 2. 현재 위치 가져오기
+      const location = await Location.getCurrentPositionAsync({});
+      const coords = {
+        lat: location.coords.latitude,
+        lng: location.coords.longitude,
+      };
+      setUserLocation(coords);
+
+      // 3. 힌트 가져오기
       const response = await fetch(
-        `https://wanderwise-wanderwise.up.railway.app/places/hint?lat=${userLocation.lat}&lng=${userLocation.lng}&mood=${mood}&radius=5000`
+        `https://wanderwise-wanderwise.up.railway.app/places/hint?lat=${coords.lat}&lng=${coords.lng}&mood=${mood}&radius=5000`
       );
       const data = await response.json();
       setHint(data);
     } catch (error) {
-      console.error('힌트 가져오기 실패:', error);
+      console.error('에러:', error);
+      setLocationError('위치를 가져올 수 없어요');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
+if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#a78bfa" />
@@ -49,9 +64,20 @@ export default function HintScreen() {
     );
   }
 
-  if (!hint || !hint.direction) {
+  if (locationError) {
     return (
-      <View style={styles.container}>
+      <View style={styles.loadingContainer}>
+        <Text style={styles.errorText}>{locationError}</Text>
+        <TouchableOpacity style={styles.button} onPress={() => router.back()}>
+          <Text style={styles.buttonText}>돌아가기</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (!hint || !hint.direction || !userLocation) {
+    return (
+      <View style={styles.loadingContainer}>
         <Text style={styles.errorText}>주변에 장소가 없어요 😢</Text>
         <TouchableOpacity style={styles.button} onPress={() => router.back()}>
           <Text style={styles.buttonText}>다시 선택하기</Text>
@@ -59,12 +85,11 @@ export default function HintScreen() {
       </View>
     );
   }
-
   return (
     <View style={styles.container}>
       <Text style={styles.moodLabel}>오늘의 무드: {mood}</Text>
       
-      {Platform.OS !== 'web' && MapView && (
+      {Platform.OS !== 'web' && MapView && userLocation && (
         <MapView
           style={styles.map}
           initialRegion={{
@@ -86,26 +111,10 @@ export default function HintScreen() {
         <Text style={styles.distance}>{hint.distance_text}</Text>
         <Text style={styles.hintText}>"{hint.hint_text}"</Text>
         <Text style={styles.category}>#{hint.category}</Text>
-      </View>
+      </View>  
 
-      <TouchableOpacity 
-        style={styles.navigateButton} 
-        onPress={() => {
-          const url = Platform.select({
-            ios: `maps://`,
-            android: `geo:0,0`,
-            default: `https://www.google.com/maps`,
-          });
-          if (url) {
-            Linking.openURL(url);
-          }
-        }}
-      >
-        <Text style={styles.navigateButtonText}>🗺️ 지도 열기</Text>
-      </TouchableOpacity>      
-
-      <TouchableOpacity style={styles.button} onPress={fetchHint}>
-        <Text style={styles.buttonText}>다른 장소 찾기</Text>
+      <TouchableOpacity style={styles.button} onPress={getLocationAndFetchHint}>
+          <Text style={styles.buttonText}>다른 장소 찾기</Text>
       </TouchableOpacity>
       
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -193,18 +202,6 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 16,
     color: '#888',
-  },
-  navigateButton: {
-    backgroundColor: '#67e8f9',
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 30,
-    marginBottom: 10,
-  },
-  navigateButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1a1a2e',
   },
   loadingContainer: {
     flex: 1,

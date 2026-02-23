@@ -11,20 +11,20 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Text style={styles.ascii}>
 {`  .        _
-   ***       ***      .
- ** . **   ** . **
-**  .  ** **  .  **    _
- ** . **   ** . **
-   ***   *   ***   .
-      **✨**
-   ***   *   ***
- ** . **   ** . **  _
-**  .  **.**  .  **
- ** . ** . ** . **    .
-   ***   .   ***
+    ***         ***      .
+ **  .  **   **  .. **
+**   ... ** **   .   **    _
+ ** ..  ** . ** . . **  .
+  . *** .. *  . ***  .  
+   . .  **✨**  .  .     .
+ .  *** .  * .  *** .
+ ** ... **   **  .  **  _
+** ..... **.** ...   **
+ **  .  ** . **  .  **    .
+    ***   .     ***    ..
   _       .        .
-            . .   *
-    WanderWise    _`}
+            . .   * .
+    WanderWise    _ .`}
       </Text>
       <Text style={styles.subtitle}>Wrong Turn In youR maP</Text>
       <Text style={styles.description}>
