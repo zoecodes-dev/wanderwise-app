@@ -160,6 +160,7 @@ export default function StopScreen() {
             {Platform.OS !== 'web' && MapView && target && (
               <MapView
                 style={styles.revealMap}
+                userInterfaceStyle="dark" /* iOS: 다크 지도로 분위기 맞춤 */
                 initialRegion={{
                   latitude: target.lat,
                   longitude: target.lng,
@@ -167,14 +168,18 @@ export default function StopScreen() {
                   longitudeDelta: 0.005,
                 }}
               >
-                <Marker coordinate={{ latitude: target.lat, longitude: target.lng }} title={stop.reveal?.display_name} />
-                {userLoc && (
-                  <Marker
-                    coordinate={{ latitude: userLoc.lat, longitude: userLoc.lng }}
-                    title="현재 위치"
-                    pinColor="#67e8f9"
-                  />
-                )}
+                {/* 기본 빨간 핀 대신 브랜드 색 글로우 마커 */}
+                <Marker
+                  coordinate={{ latitude: target.lat, longitude: target.lng }}
+                  title={stop.reveal?.display_name}
+                  anchor={{ x: 0.5, y: 0.5 }}
+                >
+                  <View style={styles.glowMarkerOuter}>
+                    <View style={styles.glowMarkerMid}>
+                      <View style={styles.glowMarkerCore} />
+                    </View>
+                  </View>
+                </Marker>
               </MapView>
             )}
 
@@ -457,5 +462,29 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 16,
     marginBottom: 18,
+  },
+  glowMarkerOuter: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(167,139,250,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glowMarkerMid: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(167,139,250,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glowMarkerCore: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#e9d5ff',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
 });
