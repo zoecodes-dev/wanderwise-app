@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Animated, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Animated, Platform, Linking } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import * as Location from 'expo-location';
@@ -6,10 +6,22 @@ import * as Location from 'expo-location';
 // 지도는 네이티브(실기기/시뮬레이터)에서만 — 웹은 react-native-maps 미지원
 let MapView: any = null;
 let Marker: any = null;
+let Polyline: any = null;
 if (Platform.OS !== 'web') {
   const Maps = require('react-native-maps');
   MapView = Maps.default;
   Marker = Maps.Marker;
+  Polyline = Maps.Polyline;
+}
+
+// 두 점을 모두 담는 지도 영역
+function regionFor(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  return {
+    latitude: (a.lat + b.lat) / 2,
+    longitude: (a.lng + b.lng) / 2,
+    latitudeDelta: Math.max(Math.abs(a.lat - b.lat) * 2.2, 0.008),
+    longitudeDelta: Math.max(Math.abs(a.lng - b.lng) * 2.2, 0.008),
+  };
 }
 
 const ARRIVE_RADIUS_M = 100; // 이 거리 안에 들어오면 자동 도착 판정
@@ -76,6 +88,17 @@ export default function StopScreen() {
     }
   }, [revealed]);
 
+  // reveal 후에만 — 이름이 공개됐으니 외부 지도 앱으로 길찾기 가능
+  const openInMaps = () => {
+    if (!target) return;
+    const q = encodeURIComponent(stop.reveal?.display_name ?? '');
+    const url =
+      Platform.OS === 'ios'
+        ? `http://maps.apple.com/?ll=${target.lat},${target.lng}&q=${q}`
+        : `https://www.google.com/maps/search/?api=1&query=${target.lat},${target.lng}`;
+    Linking.openURL(url);
+  };
+
   // ---------- 도착 후: reveal ----------
   if (revealed) {
     return (
@@ -105,8 +128,11 @@ export default function StopScreen() {
           </MapView>
         )}
 
-        <TouchableOpacity style={styles.button} onPress={() => router.back()}>
-          <Text style={styles.buttonText}>동선으로 돌아가기</Text>
+        <TouchableOpacity style={styles.button} onPress={openInMaps}>
+          <Text style={styles.buttonText}>{Platform.OS === 'ios' ? '애플 지도로 열기' : '지도 앱으로 열기'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>동선으로 돌아가기</Text>
         </TouchableOpacity>
       </Animated.View>
     );
@@ -122,18 +148,31 @@ export default function StopScreen() {
         </Text>
       </View>
 
-      {Platform.OS !== 'web' && MapView && userLoc ? (
+      {Platform.OS !== 'web' && MapView && userLoc && target ? (
         <MapView
           style={styles.map}
-          region={{
-            latitude: userLoc.lat,
-            longitude: userLoc.lng,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
+          showsPointsOfInterest={false} /* 상호(POI) 라벨 끔 → 위치는 보이되 이름은 안 샘 */
+          showsUserLocation={false}
+          region={regionFor(userLoc, target)}
         >
           <Marker coordinate={{ latitude: userLoc.lat, longitude: userLoc.lng }} title="현재 위치" pinColor="#67e8f9" />
-          {/* 목적지 핀은 도착 전까지 표시하지 않음 — 위치가 곧 정체이므로 */}
+          {/* 목적지: 정확 위치는 보여주되 이름은 숨긴 익명 핀 */}
+          <Marker coordinate={{ latitude: target.lat, longitude: target.lng }} title="???" anchor={{ x: 0.5, y: 0.5 }}>
+            <View style={styles.mysteryPin}>
+              <Text style={styles.mysteryPinText}>?</Text>
+            </View>
+          </Marker>
+          {Polyline && (
+            <Polyline
+              coordinates={[
+                { latitude: userLoc.lat, longitude: userLoc.lng },
+                { latitude: target.lat, longitude: target.lng },
+              ]}
+              strokeColor="#a78bfa"
+              strokeWidth={3}
+              lineDashPattern={[6, 6]}
+            />
+          )}
         </MapView>
       ) : (
         <View style={[styles.map, styles.mapPlaceholder]}>
@@ -206,6 +245,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#2a2a4e',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  mysteryPin: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#a78bfa',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  mysteryPinText: {
+    color: '#1a1a2e',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   placeholderText: {
     color: '#888',
