@@ -143,9 +143,7 @@ export default function StopScreen() {
     return (
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.revealScroll}>
-          <View style={styles.glow} pointerEvents="none" />
-
-          <Animated.Text style={[styles.revealBadge, badgeStyle]}>✦   도 착   ✦</Animated.Text>
+          <Animated.Text style={[styles.revealBadge, badgeStyle]}>도   착</Animated.Text>
           <Animated.Text style={[styles.revealName, nameStyle]}>{stop.reveal?.display_name}</Animated.Text>
           {(stop.neighborhood || stop.category) && (
             <Animated.Text style={[styles.revealSub, subStyle]}>
@@ -157,32 +155,6 @@ export default function StopScreen() {
           <Animated.Text style={[styles.revealText, storyStyle]}>{stop.reveal?.reveal_text}</Animated.Text>
 
           <Animated.View style={[styles.revealRest, restStyle]}>
-            {Platform.OS !== 'web' && MapView && target && (
-              <MapView
-                style={styles.revealMap}
-                userInterfaceStyle="dark" /* iOS: 다크 지도로 분위기 맞춤 */
-                initialRegion={{
-                  latitude: target.lat,
-                  longitude: target.lng,
-                  latitudeDelta: 0.005,
-                  longitudeDelta: 0.005,
-                }}
-              >
-                {/* 기본 빨간 핀 대신 브랜드 색 글로우 마커 */}
-                <Marker
-                  coordinate={{ latitude: target.lat, longitude: target.lng }}
-                  title={stop.reveal?.display_name}
-                  anchor={{ x: 0.5, y: 0.5 }}
-                >
-                  <View style={styles.glowMarkerOuter}>
-                    <View style={styles.glowMarkerMid}>
-                      <View style={styles.glowMarkerCore} />
-                    </View>
-                  </View>
-                </Marker>
-              </MapView>
-            )}
-
             {routeButtons}
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Text style={styles.backButtonText}>동선으로 돌아가기</Text>
@@ -407,30 +379,19 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
     paddingHorizontal: 24,
   },
-  glow: {
-    position: 'absolute',
-    top: '14%',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: '#a78bfa',
-    opacity: 0.13,
-  },
   revealBadge: {
-    fontSize: 13,
-    color: '#67e8f9',
-    letterSpacing: 6,
-    marginBottom: 22,
+    fontSize: 12,
+    color: '#7c7c96',
+    letterSpacing: 8,
+    marginBottom: 24,
   },
   revealName: {
-    fontSize: 38,
-    fontWeight: 'bold',
+    fontSize: 34,
+    fontWeight: '600',
     color: '#fff',
     textAlign: 'center',
-    textShadowColor: '#a78bfa',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 18,
-    marginBottom: 8,
+    letterSpacing: 0.5,
+    marginBottom: 10,
   },
   revealSub: {
     fontSize: 14,
@@ -456,35 +417,5 @@ const styles = StyleSheet.create({
   revealRest: {
     width: '100%',
     alignItems: 'stretch',
-  },
-  revealMap: {
-    width: '100%',
-    height: 200,
-    borderRadius: 16,
-    marginBottom: 18,
-  },
-  glowMarkerOuter: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: 'rgba(167,139,250,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  glowMarkerMid: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(167,139,250,0.45)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  glowMarkerCore: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#e9d5ff',
-    borderWidth: 2,
-    borderColor: '#fff',
   },
 });
