@@ -1,50 +1,106 @@
-# Welcome to your Expo app 👋
+# WanderWise — *Designed Serendipity*
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+> 목적지의 **이름을 도착 전까지 숨기는** 여행 앱.
+> 무드를 고르면 하루 동선을 만들어 주되, 각 장소는 *이름 없이* 시적인 힌트·방향·시간만 보여 준다.
+> 그 앞에 실제로 **도착하는 순간** 이름과 이야기가 펼쳐진다 — 그 reveal이 이 앱의 감정적 핵심.
 
-## Get started
+React Native(Expo) 프론트엔드 레포입니다. 동선 생성은 별도 백엔드(FastAPI + Supabase)가 담당합니다.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## 🎬 경험 흐름
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+무드 선택 ──▶ 하루 동선(이름 숨김: 힌트·방향·시간만)
+                    │  카드 탭
+                    ▼
+          접근 화면(지도 + 목적지까지 거리, 익명 ? 핀 · 네이버/카카오 길찾기)
+                    │  GPS 반경 100m 진입  /  "여기 도착했어요"
+                    ▼
+              reveal — 가게 이름 · 이야기 공개 ✨
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+| 무드 선택 | 동선(이름 숨김) | 접근(길안내) | 도착(reveal) |
+|:---:|:---:|:---:|:---:|
+| _add screenshot_ | _add screenshot_ | _add screenshot_ | _add screenshot_ |
 
-## Learn more
+> 스크린샷은 `assets/screenshots/`에 넣고 위 표를 채우면 됩니다.
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 💡 설계 결정 (이 프로젝트에서 고민한 것)
 
-## Join the community
+### 1. "숨기는 건 *이름·정체*지 *위치*가 아니다"
+완전히 위치까지 숨기면 도시에서 **걸어서 못 찾아간다**(실효성 0). 그래서 경계를 다시 그었다:
+접근 단계에선 **좌표·경로는 보여 주되**(앱 내 지도에 `showsPointsOfInterest={false}`로 상호 라벨을 꺼서) **이름만** 숨긴다. 실명·이야기·정확한 핀은 **도착 판정 후**에만 공개. 길찾기는 한국 사용자에 맞춰 **네이버/카카오 딥링크**로 연결(구글 지도는 국내 길찾기가 제한됨).
 
-Join our community of developers creating universal apps.
+### 2. 요청당 LLM 호출 0 — 감성은 미리, 물류는 코드로
+처음엔 요청마다 Claude가 동선을 통째로 생성 → **응답 15초 + 매 요청 토큰 비용**. 앱으로서 비현실적이었다.
+핵심 관찰: **감성 콘텐츠(시적 힌트·reveal 문구)는 장소 단위라 미리 생성·저장**할 수 있고, 요청 시 필요한 건 *선택·순서·시간·이동수단·방향* 뿐 — 이건 코드로 결정 가능하다.
+→ **결정적 플래너**로 전환(카테고리 다양성 선택 · 최근접 이웃 정렬 · 점심 슬롯 배치 · 거리 기반 이동수단/방위).
+**결과: ~15초 → ~1.4초, 요청당 LLM 비용 0.**
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### 3. 마지막 외부 호출까지 제거
+무드가 고정 라벨 10개라, 그 **임베딩을 미리 계산해 캐시** → 요청 때 OpenAI 임베딩 호출도 사라짐. (자유 입력 무드는 라이브 임베딩으로 폴백)
+→ 요청당 남는 건 **Supabase 벡터 검색 한 번** 뿐.
+
+### 4. reveal은 덜어낼수록 강해진다
+지도·핀·장식을 얹을수록 클라이맥스가 싸구려가 됐다. 결국 **말과 여백**으로: 헤더를 숨겨 전체화면 몰입, 이름이 떠오르듯 단계적으로 등장(Animated), 길찾기 버튼은 차분한 고스트 스타일로 물러나게.
+
+---
+
+## 🏗️ 아키텍처
+
+```
+┌─────────────────────────────┐        ┌──────────────────────────────────────┐
+│  앱 (이 레포, React Native)   │        │  백엔드 (FastAPI, Railway 배포)         │
+│  Expo · expo-router          │ POST   │                                        │
+│  expo-location · maps        │ ─────▶ │  /itinerary                            │
+│  reveal 연출(Animated)        │ /itin. │   1. 무드 임베딩 (precompute 캐시)       │
+└─────────────────────────────┘        │   2. pgvector 유사도 검색 (Supabase)    │
+                                        │   3. 결정적 플래너(선택·순서·시간·방향)   │
+                                        │   4. 응답: 동선(이름 숨김) + reveal 분리 │
+                                        └──────────────────────────────────────┘
+       오프라인 파이프라인 (별도):  장소 수집 → Claude로 시적 힌트·reveal 문구 생성
+                                  → OpenAI 임베딩 → Supabase(pgvector) 적재
+```
+
+**이름 숨김은 서버가 보장한다** — 응답 `stops[]`에는 힌트·방향·시간만, 실명·`reveal_text`·좌표는 별도 `reveal` 블록에만 담겨 도착 전까지 클라이언트가 렌더하지 않는다.
+
+---
+
+## 🛠️ 기술 스택
+
+**프론트엔드** · React Native (Expo), TypeScript, expo-router(파일 기반 라우팅), expo-location(GPS·도착 판정), react-native-maps, Reanimated/Animated, 네이버·카카오 지도 딥링크
+
+**백엔드** · FastAPI, Supabase(Postgres + pgvector), Anthropic Claude(오프라인 콘텐츠 생성), OpenAI 임베딩, Docker · Railway 배포
+
+---
+
+## 🚀 로컬 실행
+
+```bash
+npm install
+npx expo start          # QR 스캔(Expo Go) 또는 i/a/w
+```
+
+- 백엔드 베이스 URL은 [`constants/api.ts`](constants/api.ts)에서 설정 (기본값은 배포된 공개 API)
+- 동선은 **서울** 데이터 기준 — 시뮬레이터로 볼 땐 위치를 서울로 지정해야 결과가 나온다
+  (iOS Simulator → Features → Location → Custom, 예: `37.5657, 127.0202`)
+
+---
+
+## 📌 주요 화면
+
+| 파일 | 역할 |
+|---|---|
+| [`app/mood.tsx`](app/mood.tsx) | 무드 선택 |
+| [`app/hint.tsx`](app/hint.tsx) | 하루 동선(이름 숨김) 표시 |
+| [`app/stop.tsx`](app/stop.tsx) | 접근(지도·거리·길찾기) → 도착 판정 → reveal |
+
+---
+
+## 🔭 다음 / 한계
+- 현재 서울 데이터만 — 도시 확장 시 데이터 파이프라인 재실행 필요
+- 접근 단계 길찾기는 외부 지도 앱 핸드오프(앱 내 턴바이턴은 미구현)
+- 자유 입력 무드 지원 시 임베딩 캐시 미스 → 라이브 임베딩 비용 발생
