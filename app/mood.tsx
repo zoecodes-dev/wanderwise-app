@@ -23,9 +23,10 @@ export default function MoodScreen() {
   };
 
   const handleNext = () => {
-    if (selectedMood) {
-      router.push(`/hint?mood=${selectedMood}`);
-    }
+    if (!selectedMood) return;
+    // 무드는 백엔드에서 자유 텍스트로 임베딩됨 → 한글 label이 한국 장소와 매칭이 더 잘 됨
+    const moodText = MOODS.find((m) => m.id === selectedMood)?.label ?? selectedMood;
+    router.push(`/hint?mood=${encodeURIComponent(moodText)}`);
   };
 
   return (
