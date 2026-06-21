@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Animated, Platform, Linking } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Animated, Platform, Linking, Easing, ScrollView } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import * as Location from 'expo-location';
@@ -57,7 +57,7 @@ export default function StopScreen() {
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
-  const fade = useRef(new Animated.Value(0)).current;
+  const intro = useRef(new Animated.Value(0)).current; // reveal 등장 시퀀스 0→1
 
   // 위치 추적 → 목적지와의 거리 계산 → 반경 안이면 자동 reveal
   useEffect(() => {
@@ -81,10 +81,15 @@ export default function StopScreen() {
     return () => sub?.remove();
   }, []);
 
-  // 도착하면 reveal 페이드인
+  // 도착하면 단계적으로 펼쳐지는 reveal 시퀀스 (장식 → 이름 → 이야기 → 지도)
   useEffect(() => {
     if (revealed) {
-      Animated.timing(fade, { toValue: 1, duration: 900, useNativeDriver: true }).start();
+      Animated.timing(intro, {
+        toValue: 1,
+        duration: 2200,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
     }
   }, [revealed]);
 
@@ -120,38 +125,66 @@ export default function StopScreen() {
 
   // ---------- 도착 후: reveal ----------
   if (revealed) {
+    // intro(0→1)를 구간별로 끊어 장식 → 이름 → 이야기 → 지도 순으로 등장
+    const seg = (from: number, to: number) =>
+      intro.interpolate({ inputRange: [from, to], outputRange: [0, 1], extrapolate: 'clamp' });
+    const rise = (from: number, to: number, dist = 20) =>
+      intro.interpolate({ inputRange: [from, to], outputRange: [dist, 0], extrapolate: 'clamp' });
+
+    const badgeStyle = { opacity: seg(0, 0.18) };
+    const nameStyle = {
+      opacity: seg(0.18, 0.5),
+      transform: [{ translateY: rise(0.18, 0.5, 26) }, { scale: intro.interpolate({ inputRange: [0.18, 0.5], outputRange: [0.94, 1], extrapolate: 'clamp' }) }],
+    };
+    const subStyle = { opacity: seg(0.4, 0.62) };
+    const storyStyle = { opacity: seg(0.55, 0.8), transform: [{ translateY: rise(0.55, 0.8, 16) }] };
+    const restStyle = { opacity: seg(0.8, 1) };
+
     return (
-      <Animated.View style={[styles.container, styles.revealContainer, { opacity: fade }]}>
-        <Text style={styles.revealBadge}>도착!</Text>
-        <Text style={styles.revealName}>{stop.reveal?.display_name}</Text>
-        <Text style={styles.revealText}>{stop.reveal?.reveal_text}</Text>
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.revealScroll}>
+          <View style={styles.glow} pointerEvents="none" />
 
-        {Platform.OS !== 'web' && MapView && target && (
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: target.lat,
-              longitude: target.lng,
-              latitudeDelta: 0.005,
-              longitudeDelta: 0.005,
-            }}
-          >
-            <Marker coordinate={{ latitude: target.lat, longitude: target.lng }} title={stop.reveal?.display_name} />
-            {userLoc && (
-              <Marker
-                coordinate={{ latitude: userLoc.lat, longitude: userLoc.lng }}
-                title="현재 위치"
-                pinColor="#67e8f9"
-              />
+          <Animated.Text style={[styles.revealBadge, badgeStyle]}>✦   도 착   ✦</Animated.Text>
+          <Animated.Text style={[styles.revealName, nameStyle]}>{stop.reveal?.display_name}</Animated.Text>
+          {(stop.neighborhood || stop.category) && (
+            <Animated.Text style={[styles.revealSub, subStyle]}>
+              {[stop.neighborhood, stop.category].filter(Boolean).join('  ·  ')}
+            </Animated.Text>
+          )}
+
+          <Animated.View style={[styles.divider, storyStyle]} />
+          <Animated.Text style={[styles.revealText, storyStyle]}>{stop.reveal?.reveal_text}</Animated.Text>
+
+          <Animated.View style={[styles.revealRest, restStyle]}>
+            {Platform.OS !== 'web' && MapView && target && (
+              <MapView
+                style={styles.revealMap}
+                initialRegion={{
+                  latitude: target.lat,
+                  longitude: target.lng,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }}
+              >
+                <Marker coordinate={{ latitude: target.lat, longitude: target.lng }} title={stop.reveal?.display_name} />
+                {userLoc && (
+                  <Marker
+                    coordinate={{ latitude: userLoc.lat, longitude: userLoc.lng }}
+                    title="현재 위치"
+                    pinColor="#67e8f9"
+                  />
+                )}
+              </MapView>
             )}
-          </MapView>
-        )}
 
-        {routeButtons}
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>동선으로 돌아가기</Text>
-        </TouchableOpacity>
-      </Animated.View>
+            {routeButtons}
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Text style={styles.backButtonText}>동선으로 돌아가기</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </ScrollView>
+      </View>
     );
   }
 
@@ -362,28 +395,67 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   // reveal
-  revealContainer: {
+  revealScroll: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 48,
+    paddingHorizontal: 24,
+  },
+  glow: {
+    position: 'absolute',
+    top: '14%',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: '#a78bfa',
+    opacity: 0.13,
   },
   revealBadge: {
-    fontSize: 16,
+    fontSize: 13,
     color: '#67e8f9',
-    letterSpacing: 4,
-    marginBottom: 16,
+    letterSpacing: 6,
+    marginBottom: 22,
   },
   revealName: {
-    fontSize: 34,
+    fontSize: 38,
     fontWeight: 'bold',
-    color: '#e9d5ff',
+    color: '#fff',
     textAlign: 'center',
-    marginBottom: 18,
+    textShadowColor: '#a78bfa',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 18,
+    marginBottom: 8,
+  },
+  revealSub: {
+    fontSize: 14,
+    color: '#a78bfa',
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  divider: {
+    width: 36,
+    height: 1,
+    backgroundColor: '#a78bfa',
+    opacity: 0.6,
+    marginVertical: 20,
   },
   revealText: {
     fontSize: 17,
-    color: '#ccc',
-    lineHeight: 26,
+    color: '#dcdce8',
+    lineHeight: 29,
+    fontStyle: 'italic',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 28,
+  },
+  revealRest: {
+    width: '100%',
+    alignItems: 'stretch',
+  },
+  revealMap: {
+    width: '100%',
+    height: 200,
+    borderRadius: 16,
+    marginBottom: 18,
   },
 });
