@@ -115,10 +115,10 @@ export default function StopScreen() {
   const routeButtons = (
     <View style={styles.routeRow}>
       <TouchableOpacity style={[styles.routeBtn, styles.naverBtn]} onPress={() => openRoute('naver')}>
-        <Text style={styles.routeBtnText}>네이버 지도로 길찾기</Text>
+        <Text style={[styles.routeBtnText, styles.naverText]}>네이버 길찾기</Text>
       </TouchableOpacity>
       <TouchableOpacity style={[styles.routeBtn, styles.kakaoBtn]} onPress={() => openRoute('kakao')}>
-        <Text style={styles.routeBtnText}>카카오맵</Text>
+        <Text style={[styles.routeBtnText, styles.kakaoText]}>카카오맵</Text>
       </TouchableOpacity>
     </View>
   );
@@ -143,7 +143,7 @@ export default function StopScreen() {
     return (
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.revealScroll}>
-          <Animated.Text style={[styles.revealBadge, badgeStyle]}>도   착</Animated.Text>
+          <Animated.Text style={[styles.revealBadge, badgeStyle]}>도착</Animated.Text>
           <Animated.Text style={[styles.revealName, nameStyle]}>{stop.reveal?.display_name}</Animated.Text>
           {(stop.neighborhood || stop.category) && (
             <Animated.Text style={[styles.revealSub, subStyle]}>
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1a1a2e',
     padding: 20,
-    paddingTop: 40,
+    paddingTop: 64,
   },
   stopHeader: {
     flexDirection: 'row',
@@ -342,26 +342,33 @@ const styles = StyleSheet.create({
   routeRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 10,
+    marginTop: 8,
+    marginBottom: 14,
   },
   routeBtn: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 30,
+    paddingVertical: 13,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    backgroundColor: 'transparent',
   },
   naverBtn: {
-    flex: 2,
-    backgroundColor: '#03c75a', // 네이버 그린
+    borderColor: 'rgba(3,199,90,0.55)', // 네이버 그린 (차분하게)
   },
   kakaoBtn: {
-    backgroundColor: '#fae100', // 카카오 옐로
+    borderColor: 'rgba(245,222,90,0.55)', // 카카오 옐로 (차분하게)
   },
   routeBtnText: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#1a1a2e',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  naverText: {
+    color: '#46d889',
+  },
+  kakaoText: {
+    color: '#e7d24e',
   },
   backButton: {
     paddingVertical: 10,
@@ -382,8 +389,8 @@ const styles = StyleSheet.create({
   revealBadge: {
     fontSize: 12,
     color: '#7c7c96',
-    letterSpacing: 8,
-    marginBottom: 24,
+    letterSpacing: 5,
+    marginBottom: 22,
   },
   revealName: {
     fontSize: 34,
