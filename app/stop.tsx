@@ -88,16 +88,35 @@ export default function StopScreen() {
     }
   }, [revealed]);
 
-  // reveal 후에만 — 이름이 공개됐으니 외부 지도 앱으로 길찾기 가능
-  const openInMaps = () => {
+  // 한국은 네이버/카카오 지도 사용 (구글은 길찾기 막힘). 좌표로 경로 안내.
+  // 도착 전엔 목적지명을 '목적지'로만 넘겨 이름 숨김 유지, 도착 후엔 실명으로.
+  const openRoute = (provider: 'naver' | 'kakao') => {
     if (!target) return;
-    const q = encodeURIComponent(stop.reveal?.display_name ?? '');
-    const url =
-      Platform.OS === 'ios'
-        ? `http://maps.apple.com/?ll=${target.lat},${target.lng}&q=${q}`
-        : `https://www.google.com/maps/search/?api=1&query=${target.lat},${target.lng}`;
-    Linking.openURL(url);
+    const name = (revealed ? stop.reveal?.display_name : '목적지') || '목적지';
+    const enc = encodeURIComponent(name);
+    const kakaoWeb = `https://map.kakao.com/link/to/${enc},${target.lat},${target.lng}`;
+    if (provider === 'kakao') {
+      Linking.openURL(`kakaomap://route?ep=${target.lat},${target.lng}&by=PUBLICTRANSIT`).catch(() =>
+        Linking.openURL(kakaoWeb)
+      );
+    } else {
+      // nmap route: public=대중교통. 앱 미설치 시 카카오 웹으로 폴백(네이버 웹 길찾기 URL은 불안정)
+      Linking.openURL(
+        `nmap://route/public?dlat=${target.lat}&dlng=${target.lng}&dname=${enc}&appname=wanderwiseapp`
+      ).catch(() => Linking.openURL(kakaoWeb));
+    }
   };
+
+  const routeButtons = (
+    <View style={styles.routeRow}>
+      <TouchableOpacity style={[styles.routeBtn, styles.naverBtn]} onPress={() => openRoute('naver')}>
+        <Text style={styles.routeBtnText}>네이버 지도로 길찾기</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[styles.routeBtn, styles.kakaoBtn]} onPress={() => openRoute('kakao')}>
+        <Text style={styles.routeBtnText}>카카오맵</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   // ---------- 도착 후: reveal ----------
   if (revealed) {
@@ -128,9 +147,7 @@ export default function StopScreen() {
           </MapView>
         )}
 
-        <TouchableOpacity style={styles.button} onPress={openInMaps}>
-          <Text style={styles.buttonText}>{Platform.OS === 'ios' ? '애플 지도로 열기' : '지도 앱으로 열기'}</Text>
-        </TouchableOpacity>
+        {routeButtons}
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Text style={styles.backButtonText}>동선으로 돌아가기</Text>
         </TouchableOpacity>
@@ -196,6 +213,7 @@ export default function StopScreen() {
         {distance != null ? `목적지까지 약 ${Math.round(distance)}m` : '위치를 찾는 중...'}
       </Text>
 
+      {routeButtons}
       <TouchableOpacity style={styles.button} onPress={() => setRevealed(true)}>
         <Text style={styles.buttonText}>여기 도착했어요</Text>
       </TouchableOpacity>
@@ -308,6 +326,30 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1a1a2e',
+  },
+  routeRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 10,
+  },
+  routeBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  naverBtn: {
+    flex: 2,
+    backgroundColor: '#03c75a', // 네이버 그린
+  },
+  kakaoBtn: {
+    backgroundColor: '#fae100', // 카카오 옐로
+  },
+  routeBtnText: {
+    fontSize: 15,
     fontWeight: 'bold',
     color: '#1a1a2e',
   },
