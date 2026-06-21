@@ -92,7 +92,12 @@ export default function ItineraryScreen() {
         {itinerary.summary ? <Text style={styles.summary}>{itinerary.summary}</Text> : null}
 
         {itinerary.stops.map((stop: any) => (
-          <View key={stop.order} style={styles.stopCard}>
+          <TouchableOpacity
+            key={stop.order}
+            style={styles.stopCard}
+            activeOpacity={0.85}
+            onPress={() => router.push({ pathname: '/stop', params: { stop: JSON.stringify(stop) } })}
+          >
             <View style={styles.stopHeader}>
               <Text style={styles.order}>{stop.order}</Text>
               <Text style={styles.time}>
@@ -112,8 +117,9 @@ export default function ItineraryScreen() {
               <Text style={styles.category}>#{stop.category}</Text>
               {stop.neighborhood ? <Text style={styles.neighborhood}>{stop.neighborhood}</Text> : null}
             </View>
-            {/* 가게 이름·좌표·reveal_text는 도착 전까지 숨김 — 4일차 reveal에서 공개 */}
-          </View>
+            {/* 가게 이름·좌표·reveal_text는 도착 전까지 숨김 — 도착 시 stop 화면에서 공개 */}
+            <Text style={styles.tapHint}>탭하면 길안내 →</Text>
+          </TouchableOpacity>
         ))}
 
         <TouchableOpacity style={styles.button} onPress={getLocationAndFetch}>
@@ -231,6 +237,12 @@ const styles = StyleSheet.create({
   neighborhood: {
     fontSize: 14,
     color: '#a78bfa',
+  },
+  tapHint: {
+    fontSize: 13,
+    color: '#67e8f9',
+    marginTop: 12,
+    textAlign: 'right',
   },
   button: {
     backgroundColor: '#a78bfa',
