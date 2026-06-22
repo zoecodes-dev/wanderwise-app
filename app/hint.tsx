@@ -4,21 +4,6 @@ import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
 import { API_BASE_URL } from '@/constants/api';
 
-// 카테고리별 포인트 색 — 단조로움을 깨고 장소 성격을 색으로 구분 (어두운 톤에 맞춘 차분한 채도)
-const CATEGORY_COLORS: Record<string, string> = {
-  '카페': '#e0a872',
-  '베이커리': '#e8c08a',
-  '노포': '#e08a6e',
-  '시장': '#d8a15e',
-  '바': '#c79be0',
-  '갤러리': '#7fb5c9',
-  '독립서점': '#9db884',
-  '공방': '#caa98a',
-  '전망': '#8aa6d8',
-  '공원': '#85c0a0',
-};
-const DEFAULT_ACCENT = '#a78bfa';
-
 export default function ItineraryScreen() {
   const { mood } = useLocalSearchParams<{ mood: string }>();
   const [itinerary, setItinerary] = useState<any>(null);
@@ -107,17 +92,16 @@ export default function ItineraryScreen() {
         {itinerary.summary ? <Text style={styles.summary}>{itinerary.summary}</Text> : null}
 
         {itinerary.stops.map((stop: any) => {
-          const accent = CATEGORY_COLORS[stop.category] ?? DEFAULT_ACCENT;
           const moved = stop.transport?.mode && stop.transport.mode !== 'start';
           return (
             <TouchableOpacity
               key={stop.order}
-              style={[styles.stop, { borderLeftColor: accent }]}
+              style={styles.stop}
               activeOpacity={0.7}
               onPress={() => router.push({ pathname: '/stop', params: { stop: JSON.stringify(stop) } })}
             >
               <View style={styles.stopHeader}>
-                <Text style={[styles.order, { color: accent }]}>{String(stop.order).padStart(2, '0')}</Text>
+                <Text style={styles.order}>{String(stop.order).padStart(2, '0')}</Text>
                 <Text style={styles.time}>
                   {stop.arrive_time} – {stop.depart_time}
                 </Text>
@@ -127,7 +111,7 @@ export default function ItineraryScreen() {
               <Text style={styles.hintText}>&ldquo;{stop.hint}&rdquo;</Text>
 
               <View style={styles.metaRow}>
-                <Text style={[styles.category, { color: accent }]}>{stop.category}</Text>
+                <Text style={styles.category}>{stop.category}</Text>
                 {stop.neighborhood ? <Text style={styles.dot}>·</Text> : null}
                 {stop.neighborhood ? <Text style={styles.neighborhood}>{stop.neighborhood}</Text> : null}
               </View>
@@ -186,74 +170,77 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   moodLabel: {
-    color: '#9a8cc4',
-    fontSize: 13,
-    letterSpacing: 1.5,
+    color: '#a3927a',
+    fontSize: 12,
+    letterSpacing: 2,
     marginBottom: 10,
   },
   summary: {
-    color: '#dcdce8',
-    fontSize: 17,
-    lineHeight: 27,
-    marginBottom: 28,
+    color: '#d4cfc4',
+    fontSize: 15,
+    lineHeight: 24,
+    marginBottom: 26,
   },
   stop: {
-    backgroundColor: '#2c2c4c',
-    borderRadius: 16,
-    borderLeftWidth: 3,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    backgroundColor: '#201f2c',
+    borderWidth: 1,
+    borderColor: '#2e2c3e',
+    borderRadius: 10,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+    marginBottom: 12,
   },
   stopHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   order: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
     letterSpacing: 1,
+    color: '#c2a06e',
   },
   time: {
-    fontSize: 13,
-    color: '#8a8aa5',
+    fontSize: 12,
+    color: '#76747f',
   },
   hintText: {
-    fontSize: 16,
-    color: '#e6e2f0',
-    lineHeight: 25,
-    marginBottom: 14,
+    fontSize: 15,
+    color: '#e2ddd1',
+    lineHeight: 23,
+    marginBottom: 12,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   category: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.5,
+    color: '#c2a06e',
   },
   dot: {
-    fontSize: 13,
-    color: '#55556e',
+    fontSize: 12,
+    color: '#4e4c5c',
   },
   neighborhood: {
-    fontSize: 13,
-    color: '#8a8aa5',
+    fontSize: 12,
+    color: '#827f8c',
   },
   direction: {
-    fontSize: 13,
-    color: '#7c7c96',
-    lineHeight: 19,
+    fontSize: 12,
+    color: '#6c6a78',
+    lineHeight: 18,
   },
   tapHint: {
-    fontSize: 12,
-    color: '#6f6f8c',
-    marginTop: 14,
+    fontSize: 11,
+    color: '#5f5d70',
+    marginTop: 12,
     textAlign: 'right',
   },
   button: {
