@@ -198,10 +198,10 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   stop: {
-    backgroundColor: '#20203a',
+    backgroundColor: '#2c2c4c',
     borderRadius: 16,
     borderLeftWidth: 3,
-    paddingVertical: 22,
+    paddingVertical: 20,
     paddingHorizontal: 20,
     marginBottom: 16,
   },
@@ -221,10 +221,10 @@ const styles = StyleSheet.create({
     color: '#8a8aa5',
   },
   hintText: {
-    fontSize: 19,
-    color: '#ece8f5',
-    lineHeight: 30,
-    marginBottom: 18,
+    fontSize: 16,
+    color: '#e6e2f0',
+    lineHeight: 25,
+    marginBottom: 14,
   },
   metaRow: {
     flexDirection: 'row',
