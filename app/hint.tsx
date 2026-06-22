@@ -141,7 +141,7 @@ export default function ItineraryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f3f2fa',
+    backgroundColor: '#e7e5f0',
   },
   scroll: {
     padding: 20,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#f3f2fa',
+    backgroundColor: '#e7e5f0',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
@@ -184,9 +184,9 @@ const styles = StyleSheet.create({
     marginBottom: 26,
   },
   stop: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f1f0f8',
     borderWidth: 1,
-    borderColor: '#e7e5f2',
+    borderColor: '#d8d6e6',
     borderRadius: 10,
     paddingVertical: 18,
     paddingHorizontal: 18,
