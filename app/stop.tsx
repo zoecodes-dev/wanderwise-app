@@ -2,6 +2,7 @@ import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Animated, 
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import * as Location from 'expo-location';
+import { PlaceReviews } from '@/components/place-reviews';
 
 // 지도는 네이티브(실기기/시뮬레이터)에서만 — 웹은 react-native-maps 미지원
 let MapView: any = null;
@@ -163,6 +164,9 @@ export default function StopScreen() {
             >
               <Text style={styles.recordBtnText}>이곳을 기록하기</Text>
             </TouchableOpacity>
+
+            <PlaceReviews placeId={stop.place_id} />
+
             {routeButtons}
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Text style={styles.backButtonText}>동선으로 돌아가기</Text>
