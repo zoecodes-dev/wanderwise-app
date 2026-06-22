@@ -2,6 +2,7 @@ import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
+import { StatusBar } from 'expo-status-bar';
 import { API_BASE_URL } from '@/constants/api';
 
 export default function ItineraryScreen() {
@@ -87,6 +88,7 @@ export default function ItineraryScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.moodLabel}>오늘의 무드: {mood}</Text>
         {itinerary.summary ? <Text style={styles.summary}>{itinerary.summary}</Text> : null}
@@ -139,7 +141,7 @@ export default function ItineraryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#f3f2fa',
   },
   scroll: {
     padding: 20,
@@ -148,43 +150,43 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#f3f2fa',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
   },
   loadingText: {
-    color: '#a78bfa',
+    color: '#7857d6',
     fontSize: 18,
     marginTop: 20,
   },
   loadingHint: {
-    color: '#666',
+    color: '#9a98ad',
     fontSize: 12,
     marginTop: 8,
   },
   errorText: {
-    color: '#ccc',
+    color: '#3a3a4e',
     fontSize: 18,
     marginBottom: 20,
     textAlign: 'center',
   },
   moodLabel: {
-    color: '#a3927a',
+    color: '#8f7fb8',
     fontSize: 12,
     letterSpacing: 2,
     marginBottom: 10,
   },
   summary: {
-    color: '#d4cfc4',
+    color: '#4a4a5e',
     fontSize: 15,
     lineHeight: 24,
     marginBottom: 26,
   },
   stop: {
-    backgroundColor: '#201f2c',
+    backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#2e2c3e',
+    borderColor: '#e7e5f2',
     borderRadius: 10,
     paddingVertical: 18,
     paddingHorizontal: 18,
@@ -200,15 +202,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     letterSpacing: 1,
-    color: '#c2a06e',
+    color: '#7857d6',
   },
   time: {
     fontSize: 12,
-    color: '#76747f',
+    color: '#9090a4',
   },
   hintText: {
     fontSize: 15,
-    color: '#e2ddd1',
+    color: '#2a2a3a',
     lineHeight: 23,
     marginBottom: 12,
   },
@@ -222,29 +224,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.5,
-    color: '#c2a06e',
+    color: '#7857d6',
   },
   dot: {
     fontSize: 12,
-    color: '#4e4c5c',
+    color: '#c5c2d8',
   },
   neighborhood: {
     fontSize: 12,
-    color: '#827f8c',
+    color: '#8585a0',
   },
   direction: {
     fontSize: 12,
-    color: '#6c6a78',
+    color: '#9090a4',
     lineHeight: 18,
   },
   tapHint: {
     fontSize: 11,
-    color: '#5f5d70',
+    color: '#2596a6',
     marginTop: 12,
     textAlign: 'right',
   },
   button: {
-    backgroundColor: '#a78bfa',
+    backgroundColor: '#7857d6',
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 30,
@@ -255,7 +257,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1a1a2e',
+    color: '#ffffff',
   },
   backButton: {
     paddingVertical: 10,
@@ -263,6 +265,6 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    color: '#888',
+    color: '#9090a4',
   },
 });
