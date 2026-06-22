@@ -155,6 +155,14 @@ export default function StopScreen() {
           <Animated.Text style={[styles.revealText, storyStyle]}>{stop.reveal?.reveal_text}</Animated.Text>
 
           <Animated.View style={[styles.revealRest, restStyle]}>
+            <TouchableOpacity
+              style={styles.recordBtn}
+              onPress={() =>
+                router.push({ pathname: '/review', params: { place_id: stop.place_id, name: stop.reveal?.display_name } })
+              }
+            >
+              <Text style={styles.recordBtnText}>이곳을 기록하기</Text>
+            </TouchableOpacity>
             {routeButtons}
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Text style={styles.backButtonText}>동선으로 돌아가기</Text>
@@ -336,6 +344,18 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1a1a2e',
+  },
+  recordBtn: {
+    backgroundColor: '#a78bfa',
+    paddingVertical: 15,
+    borderRadius: 28,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  recordBtnText: {
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#1a1a2e',
   },
