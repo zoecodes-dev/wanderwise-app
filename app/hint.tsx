@@ -4,6 +4,21 @@ import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
 import { API_BASE_URL } from '@/constants/api';
 
+// 카테고리별 포인트 색 — 단조로움을 깨고 장소 성격을 색으로 구분 (어두운 톤에 맞춘 차분한 채도)
+const CATEGORY_COLORS: Record<string, string> = {
+  '카페': '#e0a872',
+  '베이커리': '#e8c08a',
+  '노포': '#e08a6e',
+  '시장': '#d8a15e',
+  '바': '#c79be0',
+  '갤러리': '#7fb5c9',
+  '독립서점': '#9db884',
+  '공방': '#caa98a',
+  '전망': '#8aa6d8',
+  '공원': '#85c0a0',
+};
+const DEFAULT_ACCENT = '#a78bfa';
+
 export default function ItineraryScreen() {
   const { mood } = useLocalSearchParams<{ mood: string }>();
   const [itinerary, setItinerary] = useState<any>(null);
@@ -91,36 +106,40 @@ export default function ItineraryScreen() {
         <Text style={styles.moodLabel}>오늘의 무드: {mood}</Text>
         {itinerary.summary ? <Text style={styles.summary}>{itinerary.summary}</Text> : null}
 
-        {itinerary.stops.map((stop: any) => (
-          <TouchableOpacity
-            key={stop.order}
-            style={styles.stopCard}
-            activeOpacity={0.85}
-            onPress={() => router.push({ pathname: '/stop', params: { stop: JSON.stringify(stop) } })}
-          >
-            <View style={styles.stopHeader}>
-              <Text style={styles.order}>{stop.order}</Text>
-              <Text style={styles.time}>
-                {stop.arrive_time} – {stop.depart_time}
+        {itinerary.stops.map((stop: any) => {
+          const accent = CATEGORY_COLORS[stop.category] ?? DEFAULT_ACCENT;
+          const moved = stop.transport?.mode && stop.transport.mode !== 'start';
+          return (
+            <TouchableOpacity
+              key={stop.order}
+              style={[styles.stop, { borderLeftColor: accent }]}
+              activeOpacity={0.7}
+              onPress={() => router.push({ pathname: '/stop', params: { stop: JSON.stringify(stop) } })}
+            >
+              <View style={styles.stopHeader}>
+                <Text style={[styles.order, { color: accent }]}>{String(stop.order).padStart(2, '0')}</Text>
+                <Text style={styles.time}>
+                  {stop.arrive_time} – {stop.depart_time}
+                </Text>
+              </View>
+
+              {/* 시적 힌트가 주인공 — 이름·좌표는 도착 전까지 숨김 */}
+              <Text style={styles.hintText}>&ldquo;{stop.hint}&rdquo;</Text>
+
+              <View style={styles.metaRow}>
+                <Text style={[styles.category, { color: accent }]}>{stop.category}</Text>
+                {stop.neighborhood ? <Text style={styles.dot}>·</Text> : null}
+                {stop.neighborhood ? <Text style={styles.neighborhood}>{stop.neighborhood}</Text> : null}
+              </View>
+
+              <Text style={styles.direction}>
+                {moved ? `${stop.transport.from_prev} · ` : ''}
+                {stop.direction}
               </Text>
-            </View>
-
-            {/* 도착 전 이동 안내 (첫 stop은 출발지라 생략) */}
-            {stop.transport?.mode && stop.transport.mode !== 'start' ? (
-              <Text style={styles.transport}>↳ {stop.transport.from_prev}</Text>
-            ) : null}
-
-            <Text style={styles.direction}>🧭 {stop.direction}</Text>
-            <Text style={styles.hintText}>&ldquo;{stop.hint}&rdquo;</Text>
-
-            <View style={styles.metaRow}>
-              <Text style={styles.category}>#{stop.category}</Text>
-              {stop.neighborhood ? <Text style={styles.neighborhood}>{stop.neighborhood}</Text> : null}
-            </View>
-            {/* 가게 이름·좌표·reveal_text는 도착 전까지 숨김 — 도착 시 stop 화면에서 공개 */}
-            <Text style={styles.tapHint}>탭하면 길안내 →</Text>
-          </TouchableOpacity>
-        ))}
+              <Text style={styles.tapHint}>탭하면 길안내 →</Text>
+            </TouchableOpacity>
+          );
+        })}
 
         <TouchableOpacity style={styles.button} onPress={getLocationAndFetch}>
           <Text style={styles.buttonText}>다른 동선 보기</Text>
@@ -167,81 +186,74 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   moodLabel: {
-    color: '#e9d5ff',
-    fontSize: 16,
+    color: '#9a8cc4',
+    fontSize: 13,
+    letterSpacing: 1.5,
     marginBottom: 10,
   },
   summary: {
-    color: '#ccc',
-    fontSize: 15,
-    lineHeight: 23,
-    fontStyle: 'italic',
-    marginBottom: 20,
+    color: '#dcdce8',
+    fontSize: 17,
+    lineHeight: 27,
+    marginBottom: 28,
   },
-  stopCard: {
-    backgroundColor: '#2a2a4e',
-    borderRadius: 20,
-    padding: 20,
-    width: '100%',
+  stop: {
+    backgroundColor: '#20203a',
+    borderRadius: 16,
+    borderLeftWidth: 3,
+    paddingVertical: 22,
+    paddingHorizontal: 20,
     marginBottom: 16,
   },
   stopHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   order: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#67e8f9',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#1a1a2e',
-    textAlign: 'center',
-    lineHeight: 32,
-    overflow: 'hidden',
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   time: {
-    fontSize: 14,
-    color: '#67e8f9',
-  },
-  transport: {
     fontSize: 13,
-    color: '#888',
-    marginBottom: 8,
-  },
-  direction: {
-    fontSize: 18,
-    color: '#fff',
-    fontWeight: 'bold',
-    marginBottom: 8,
+    color: '#8a8aa5',
   },
   hintText: {
-    fontSize: 16,
-    color: '#ccc',
-    lineHeight: 24,
-    fontStyle: 'italic',
-    marginBottom: 12,
+    fontSize: 19,
+    color: '#ece8f5',
+    lineHeight: 30,
+    marginBottom: 18,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 6,
+    marginBottom: 10,
   },
   category: {
-    fontSize: 14,
-    color: '#e9d5ff',
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  dot: {
+    fontSize: 13,
+    color: '#55556e',
   },
   neighborhood: {
-    fontSize: 14,
-    color: '#a78bfa',
+    fontSize: 13,
+    color: '#8a8aa5',
+  },
+  direction: {
+    fontSize: 13,
+    color: '#7c7c96',
+    lineHeight: 19,
   },
   tapHint: {
-    fontSize: 13,
-    color: '#67e8f9',
-    marginTop: 12,
+    fontSize: 12,
+    color: '#6f6f8c',
+    marginTop: 14,
     textAlign: 'right',
   },
   button: {
