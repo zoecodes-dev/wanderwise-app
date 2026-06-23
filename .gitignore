@@ -45,3 +45,4 @@ app-example
 # editor / local tooling
 .claude/
 .vscode/
+CLAUDE.md
