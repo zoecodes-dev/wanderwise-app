@@ -2,7 +2,38 @@ import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Animated, 
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import * as Location from 'expo-location';
+import { StatusBar } from 'expo-status-bar';
 import { PlaceReviews } from '@/components/place-reviews';
+import { F } from '@/constants/fonts';
+
+// 밝은 배경 + 차콜 버튼 + 카테고리 색 포인트 (mood·hint 화면과 통일)
+const C = {
+  bg: '#ecebf0',
+  card: '#f6f5f9',
+  cardBorder: '#dad8e2',
+  title: '#2d2b38',
+  body: '#4a4858',
+  bodyMuted: '#6a6878',
+  caption: '#9b99a8',
+  meta: '#8b88a0',
+  cta: '#3a3848',
+  tap: '#2596a6',
+};
+
+// 카테고리별 색 포인트 — hint 화면과 동일 매핑
+const CATEGORY_COLOR: Record<string, string> = {
+  카페: '#c07a4a',
+  독립서점: '#4a8ac0',
+  갤러리: '#b86fb0',
+  전망: '#3d8a7d',
+  시장: '#d8a020',
+  공원: '#4d8a60',
+  바: '#a85a6e',
+  공방: '#7a6fb8',
+  베이커리: '#cd5c84',
+  노포: '#c0603a',
+};
+const catColor = (category?: string) => (category && CATEGORY_COLOR[category]) || '#6b5fa8';
 
 // 지도는 네이티브(실기기/시뮬레이터)에서만 — 웹은 react-native-maps 미지원
 let MapView: any = null;
@@ -48,6 +79,8 @@ export default function StopScreen() {
       return {};
     }
   }, [stopParam]);
+
+  const accent = catColor(stop.category);
 
   // reveal 좌표는 도착 판정(거리 계산)에만 쓰고, 도착 전까지 화면엔 안 그림
   const target =
@@ -113,13 +146,14 @@ export default function StopScreen() {
     }
   };
 
-  const routeButtons = (
+  // 길찾기 버튼 — 밝은 안내 화면(light)과 다크 reveal 화면에서 대비가 달라 변형 분기
+  const renderRoute = (dark: boolean) => (
     <View style={styles.routeRow}>
-      <TouchableOpacity style={[styles.routeBtn, styles.naverBtn]} onPress={() => openRoute('naver')}>
-        <Text style={[styles.routeBtnText, styles.naverText]}>네이버 길찾기</Text>
+      <TouchableOpacity style={[styles.routeBtn, dark ? styles.naverBtnDark : styles.naverBtn]} onPress={() => openRoute('naver')}>
+        <Text style={[styles.routeBtnText, dark ? styles.naverTextDark : styles.naverText]}>네이버 길찾기</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={[styles.routeBtn, styles.kakaoBtn]} onPress={() => openRoute('kakao')}>
-        <Text style={[styles.routeBtnText, styles.kakaoText]}>카카오맵</Text>
+      <TouchableOpacity style={[styles.routeBtn, dark ? styles.kakaoBtnDark : styles.kakaoBtn]} onPress={() => openRoute('kakao')}>
+        <Text style={[styles.routeBtnText, dark ? styles.kakaoTextDark : styles.kakaoText]}>카카오맵</Text>
       </TouchableOpacity>
     </View>
   );
@@ -142,7 +176,8 @@ export default function StopScreen() {
     const restStyle = { opacity: seg(0.8, 1) };
 
     return (
-      <View style={styles.container}>
+      <View style={styles.revealContainer}>
+        <StatusBar style="light" />
         <ScrollView contentContainerStyle={styles.revealScroll}>
           <Animated.Text style={[styles.revealBadge, badgeStyle]}>도착</Animated.Text>
           <Animated.Text style={[styles.revealName, nameStyle]}>{stop.reveal?.display_name}</Animated.Text>
@@ -167,9 +202,9 @@ export default function StopScreen() {
 
             <PlaceReviews placeId={stop.place_id} />
 
-            {routeButtons}
+            {renderRoute(true)}
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Text style={styles.backButtonText}>동선으로 돌아가기</Text>
+              <Text style={styles.revealBackText}>동선으로 돌아가기</Text>
             </TouchableOpacity>
           </Animated.View>
         </ScrollView>
@@ -180,8 +215,9 @@ export default function StopScreen() {
   // ---------- 도착 전: 안내 ----------
   return (
     <View style={styles.container}>
+      <StatusBar style="dark" />
       <View style={styles.stopHeader}>
-        <Text style={styles.order}>{stop.order}</Text>
+        <Text style={[styles.order, { color: accent, borderColor: accent }]}>{stop.order}</Text>
         <Text style={styles.time}>
           {stop.arrive_time} – {stop.depart_time}
         </Text>
@@ -194,10 +230,10 @@ export default function StopScreen() {
           showsUserLocation={false}
           region={regionFor(userLoc, target)}
         >
-          <Marker coordinate={{ latitude: userLoc.lat, longitude: userLoc.lng }} title="현재 위치" pinColor="#67e8f9" />
+          <Marker coordinate={{ latitude: userLoc.lat, longitude: userLoc.lng }} title="현재 위치" pinColor="#2596a6" />
           {/* 목적지: 정확 위치는 보여주되 이름은 숨긴 익명 핀 */}
           <Marker coordinate={{ latitude: target.lat, longitude: target.lng }} title="???" anchor={{ x: 0.5, y: 0.5 }}>
-            <View style={styles.mysteryPin}>
+            <View style={[styles.mysteryPin, { backgroundColor: accent }]}>
               <Text style={styles.mysteryPinText}>?</Text>
             </View>
           </Marker>
@@ -207,7 +243,7 @@ export default function StopScreen() {
                 { latitude: userLoc.lat, longitude: userLoc.lng },
                 { latitude: target.lat, longitude: target.lng },
               ]}
-              strokeColor="#a78bfa"
+              strokeColor={accent}
               strokeWidth={3}
               lineDashPattern={[6, 6]}
             />
@@ -218,7 +254,7 @@ export default function StopScreen() {
           {Platform.OS === 'web' ? (
             <Text style={styles.placeholderText}>지도는 앱(실기기)에서 보여요</Text>
           ) : (
-            <ActivityIndicator color="#a78bfa" />
+            <ActivityIndicator color={accent} />
           )}
         </View>
       )}
@@ -227,7 +263,7 @@ export default function StopScreen() {
       <Text style={styles.hintText}>&ldquo;{stop.hint}&rdquo;</Text>
 
       <View style={styles.metaRow}>
-        <Text style={styles.category}>#{stop.category}</Text>
+        <Text style={[styles.category, { color: accent }]}>#{stop.category}</Text>
         {stop.neighborhood ? <Text style={styles.neighborhood}>{stop.neighborhood}</Text> : null}
       </View>
 
@@ -235,7 +271,7 @@ export default function StopScreen() {
         {distance != null ? `목적지까지 약 ${Math.round(distance)}m` : '위치를 찾는 중...'}
       </Text>
 
-      {routeButtons}
+      {renderRoute(false)}
       <TouchableOpacity style={styles.button} onPress={() => setRevealed(true)}>
         <Text style={styles.buttonText}>여기 도착했어요</Text>
       </TouchableOpacity>
@@ -249,7 +285,7 @@ export default function StopScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: C.bg,
     padding: 20,
     paddingTop: 64,
   },
@@ -257,23 +293,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 14,
+    marginBottom: 16,
   },
   order: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#67e8f9',
+    fontFamily: F.num,
+    fontSize: 14,
+    fontWeight: '700',
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#2a2a4e',
+    backgroundColor: C.card,
+    borderWidth: 1.5,
     textAlign: 'center',
-    lineHeight: 32,
+    lineHeight: 30,
     overflow: 'hidden',
   },
   time: {
-    fontSize: 14,
-    color: '#67e8f9',
+    fontFamily: F.label,
+    fontSize: 13,
+    color: C.caption,
   },
   map: {
     width: '100%',
@@ -282,7 +320,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   mapPlaceholder: {
-    backgroundColor: '#2a2a4e',
+    backgroundColor: C.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -290,32 +328,33 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#a78bfa',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#fff',
   },
   mysteryPinText: {
-    color: '#1a1a2e',
+    color: '#fff',
+    fontFamily: F.labelBold,
     fontSize: 20,
-    fontWeight: 'bold',
   },
   placeholderText: {
-    color: '#888',
+    fontFamily: F.label,
+    color: C.caption,
     fontSize: 14,
   },
   direction: {
-    fontSize: 20,
-    color: '#fff',
-    fontWeight: 'bold',
-    marginBottom: 10,
+    fontFamily: F.label,
+    fontSize: 15,
+    color: C.title,
+    fontWeight: '600',
+    marginBottom: 12,
   },
   hintText: {
+    fontFamily: F.body,
     fontSize: 16,
-    color: '#ccc',
-    lineHeight: 24,
-    fontStyle: 'italic',
+    color: C.title,
+    lineHeight: 26,
     marginBottom: 14,
   },
   metaRow: {
@@ -325,42 +364,47 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   category: {
-    fontSize: 14,
-    color: '#e9d5ff',
+    fontFamily: F.label,
+    fontSize: 13,
+    fontWeight: '500',
   },
   neighborhood: {
-    fontSize: 14,
-    color: '#a78bfa',
+    fontFamily: F.label,
+    fontSize: 13,
+    color: C.meta,
   },
   distance: {
-    fontSize: 16,
-    color: '#67e8f9',
+    fontFamily: F.label,
+    fontSize: 14,
+    color: C.tap,
     textAlign: 'center',
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#a78bfa',
+    backgroundColor: C.cta,
     paddingVertical: 15,
     paddingHorizontal: 40,
-    borderRadius: 30,
+    borderRadius: 28,
     marginBottom: 10,
     alignItems: 'center',
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1a1a2e',
+    fontFamily: F.label,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#ffffff',
   },
   recordBtn: {
-    backgroundColor: '#a78bfa',
+    backgroundColor: '#e9d5ff', // 첫 진입 화면 버튼 색 (다크 배경 위)
     paddingVertical: 15,
     borderRadius: 28,
     alignItems: 'center',
     marginBottom: 12,
   },
   recordBtnText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: F.label,
+    fontSize: 15,
+    fontWeight: '500',
     color: '#1a1a2e',
   },
   routeRow: {
@@ -379,19 +423,32 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   naverBtn: {
-    borderColor: 'rgba(3,199,90,0.55)', // 네이버 그린 (차분하게)
+    borderColor: 'rgba(47,158,91,0.5)', // 네이버 그린 (밝은 배경용)
   },
   kakaoBtn: {
-    borderColor: 'rgba(245,222,90,0.55)', // 카카오 옐로 (차분하게)
+    borderColor: 'rgba(184,144,26,0.5)', // 카카오 옐로 (밝은 배경용)
+  },
+  naverBtnDark: {
+    borderColor: 'rgba(3,199,90,0.55)', // 네이버 그린 (다크 배경용)
+  },
+  kakaoBtnDark: {
+    borderColor: 'rgba(245,222,90,0.55)', // 카카오 옐로 (다크 배경용)
   },
   routeBtnText: {
+    fontFamily: F.label,
     fontSize: 14,
     fontWeight: '600',
   },
   naverText: {
-    color: '#46d889',
+    color: '#2f9e5b',
   },
   kakaoText: {
+    color: '#b8901a',
+  },
+  naverTextDark: {
+    color: '#46d889',
+  },
+  kakaoTextDark: {
     color: '#e7d24e',
   },
   backButton: {
@@ -399,10 +456,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButtonText: {
-    fontSize: 16,
-    color: '#888',
+    fontFamily: F.label,
+    fontSize: 14,
+    color: C.caption,
   },
-  // reveal
+  // reveal — 첫 진입 화면 다크 팔레트 (#1a1a2e), 폰트만 새 것 유지
+  revealContainer: {
+    flex: 1,
+    backgroundColor: '#1a1a2e',
+  },
   revealScroll: {
     flexGrow: 1,
     alignItems: 'center',
@@ -411,21 +473,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   revealBadge: {
+    fontFamily: F.label,
     fontSize: 12,
     color: '#7c7c96',
     letterSpacing: 5,
     marginBottom: 22,
   },
   revealName: {
-    fontSize: 34,
-    fontWeight: '600',
-    color: '#fff',
+    fontFamily: F.title,
+    fontSize: 33,
+    color: '#ffffff',
     textAlign: 'center',
     letterSpacing: 0.5,
     marginBottom: 10,
   },
   revealSub: {
-    fontSize: 14,
+    fontFamily: F.label,
+    fontSize: 13,
     color: '#a78bfa',
     letterSpacing: 1,
     marginBottom: 6,
@@ -438,12 +502,17 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   revealText: {
+    fontFamily: F.body,
     fontSize: 17,
     color: '#dcdce8',
     lineHeight: 29,
-    fontStyle: 'italic',
     textAlign: 'center',
     marginBottom: 28,
+  },
+  revealBackText: {
+    fontFamily: F.label,
+    fontSize: 14,
+    color: '#9a9ab5',
   },
   revealRest: {
     width: '100%',
