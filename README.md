@@ -21,12 +21,12 @@ React Native(Expo) 프론트엔드 레포입니다. 동선 생성은 별도 백�
 ```
 
 <p align="center">
-  <img src="assets/screenshots/01-opening.png" width="300" alt="오프닝" />
+  <img src="assets/screenshots/01-opening.jpg" width="300" alt="오프닝" />
 </p>
 
 | 무드 선택 | 동선(이름 숨김) | 접근(길안내) | 도착(reveal) |
 |:---:|:---:|:---:|:---:|
-| <img src="assets/screenshots/02-mood.png" width="200" alt="무드 선택" /> | <img src="assets/screenshots/03-itinerary.png" width="200" alt="동선" /> | <img src="assets/screenshots/04-approach.png" width="200" alt="접근" /> | <img src="assets/screenshots/05-reveal.png" width="200" alt="도착" /> |
+| <img src="assets/screenshots/02-mood.jpg" width="200" alt="무드 선택" /> | <img src="assets/screenshots/03-itinerary.jpg" width="200" alt="동선" /> | <img src="assets/screenshots/04-approach.jpg" width="200" alt="접근" /> | <img src="assets/screenshots/05-reveal.jpg" width="200" alt="도착" /> |
 
 ---
 
