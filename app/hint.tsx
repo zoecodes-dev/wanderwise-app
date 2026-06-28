@@ -35,6 +35,9 @@ const C = {
 const FOOD_CATEGORIES = ['노포', '베이커리', '시장'];
 const isLunch = (category?: string) => !!category && FOOD_CATEGORIES.includes(category);
 
+// 로딩 보조 문구 — 시간 언급 없이 단계만 전환 (무드 읽기 → 동선 짜기 → 마무리)
+const LOADING_HINTS = ['무드를 읽는 중...', '동선을 짜는 중...', '거의 다 됐어요...'];
+
 const MODE_KO: Record<string, string> = { walk: '도보', transit: '대중교통', subway: '지하철', bus: '버스' };
 const modeKo = (mode?: string) => (mode ? MODE_KO[mode] ?? '이동' : '이동');
 
@@ -89,10 +92,25 @@ export default function ItineraryScreen() {
   const [itinerary, setItinerary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingStep, setLoadingStep] = useState(0);
 
   useEffect(() => {
     getLocationAndFetch();
   }, []);
+
+  // 로딩 보조 문구를 순차로 전환 (1.5초 후 → 3초 후)
+  useEffect(() => {
+    if (!loading) {
+      setLoadingStep(0);
+      return;
+    }
+    const t1 = setTimeout(() => setLoadingStep(1), 1500);
+    const t2 = setTimeout(() => setLoadingStep(2), 3000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [loading]);
 
   const getLocationAndFetch = async () => {
     setLoading(true);
@@ -146,7 +164,7 @@ export default function ItineraryScreen() {
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={C.accent} />
         <Text style={styles.loadingText}>오늘의 우연을 엮는 중...</Text>
-        <Text style={styles.loadingHint}>동선을 그리는 데 15초쯤 걸려요</Text>
+        <Text style={styles.loadingHint}>{LOADING_HINTS[loadingStep]}</Text>
       </View>
     );
   }
